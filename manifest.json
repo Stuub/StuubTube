@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "StuubTube",
+    "version": "1.0",
+    "description": "Automating the block ad functionality through YouTubes' Ad Center",
+    "permissions": ["tabs", "activeTab", "scripting", "storage"],
+    "host_permissions": [
+      "https://www.youtube.com/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://www.youtube.com/*"],
+        "js": ["content.js"]
+      }
+    ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "16.png",
+        "48": "48.png",
+        "128": "128.png"
+      }
+    },
+    "icons": {
+      "16": "16.png",
+      "48": "48.png",
+      "128": "128.png"
+    }
+  }
+  
