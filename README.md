@@ -40,4 +40,4 @@ The extension essentially automates steps that can be done manually, but saves y
 
 - YouTube may change its Ad Center functionality, which could break StuubTube.
 
-- This extension is not officially endorsed by or affiliated with YouTube. Despite this, it only uses a method available to any user on any device.
+- This extension is not officially endorsed by or affiliated with YouTube. Despite this, it only uses a method available to any user on any device without thr extension.
