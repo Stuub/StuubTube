@@ -1,11 +1,11 @@
 # StuubTube
 
-StuubTube is a browser extension that automates the process of blocking ads on YouTube using YouTube's own Ad Center functionality.
+A browser extension, automating the process of blocking ads on YouTube using YouTube's own Ad Center functionality.
 
 ## Installation
 
 
-StuubTube isnt available on official extension stores. Here's how to install it manually:
+StuubTube isn't available on official extension stores. Here's how to install it manually:
 
 ## Chrome
 
@@ -21,6 +21,9 @@ Once installed, StuubTube will automatically attempt to block ads on YouTube vid
 
 Additionally, a tracker of your total adverts blocked since using the extension will also be counted :)
 
+![image](https://github.com/user-attachments/assets/1d4c446d-466f-4807-9c66-79963ad26a98)
+
+
 ## How it Works
 The extension essentially automates steps that can be done manually, but saves you that effort in these steps:
 
@@ -30,8 +33,11 @@ The extension essentially automates steps that can be done manually, but saves y
 4. Confirms the action.
 5. Closes the Ad Center.
 
+![image](https://github.com/user-attachments/assets/1b488c50-aa6c-4e1e-82aa-bfd18b752ae4)
+
+
 ## Limitations
 
-- YouTube may change their Ad Center functionality, which could break StuubTube.
+- YouTube may change its Ad Center functionality, which could break StuubTube.
 
-- This extension is not officially endorsed by or affiliated with YouTube. Despite, it is only using a method that is available to any user on any device. 
+- This extension is not officially endorsed by or affiliated with YouTube. Despite this, it only uses a method available to any user on any device.
