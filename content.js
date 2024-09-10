@@ -78,34 +78,91 @@ async function verifyElementClicked(element, verificationFn) {
     return false;
 }
 
+async function waitForIframeContent(iframeElement, timeout = 5000) {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
+        if (iframeElement.contentDocument && iframeElement.contentDocument.body) {
+            return iframeElement.contentDocument;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    throw new Error("Timeout waiting for iframe content");
+}
+
+async function retryOperation(operation, maxAttempts = 3, delay = 1000) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await operation();
+        } catch (error) {
+            if (attempt === maxAttempts) throw error;
+            console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
 async function blockAd() {
     if (isBlockingAd) return;
 
     isBlockingAd = true;
+    let adCenterOpen = false;
+    
     try {
-        // Step 1: Find and open ad center
-        console.log('Opening Ad Center...');
-        const adButton = await clickElement('.ytp-ad-button-icon', document, 3000);
-        await verifyElementClicked(adButton, () => document.querySelector('iframe#iframe'));
+        await retryOperation(async () => {
+            // Step 1: Find and open ad center
+            console.log('Opening Ad Center...');
+            const adButton = await clickElement('.ytp-ad-button-icon', document, 5000);
+            
+            // Prevent ad center from closing
+            const preventClose = () => {
+                const closeButton = document.querySelector('button[aria-label="Close"]');
+                if (closeButton) {
+                    closeButton.style.pointerEvents = 'none';
+                }
+            };
+            
+            // Wait for iframe to appear and prevent it from closing
+            await new Promise((resolve, reject) => {
+                const observer = new MutationObserver(() => {
+                    const iframe = document.querySelector('iframe#iframe');
+                    if (iframe) {
+                        preventClose();
+                        adCenterOpen = true;
+                        observer.disconnect();
+                        resolve();
+                    }
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+                setTimeout(() => reject(new Error("Timeout waiting for iframe")), 5000);
+            });
 
-        // Step 2: Find and click "block ad" button within the ad center
-        console.log('Accessing Ad Center iframe...');
-        const iframeElement = await waitForElement('iframe#iframe', document, 3000);
-        const iframeDocument = await waitForIframeLoad(iframeElement);
-        
-        console.log('Clicking "Block ad" button...');
-        const blockAdButton = await findAndClickButton('Block ad', iframeDocument, 'button[aria-label="Block ad"], gm3-text-button[data-aria-label="Block ad"]');
-        await verifyElementClicked(blockAdButton, () => findElementByText('CONTINUE', iframeDocument));
+            if (!adCenterOpen) {
+                throw new Error("Ad center did not open");
+            }
 
-        // Step 3: Find and click continue button
-        console.log('Clicking "CONTINUE" button...');
-        const continueButton = await findAndClickButton('CONTINUE', iframeDocument, 'div[role="button"][jsname="uYM01c"]');
-        await verifyElementClicked(continueButton, () => findElementByText('Close', iframeDocument));
+            // Step 2: Find and click "block ad" button within the ad center
+            console.log('Accessing Ad Center iframe...');
+            const iframeElement = await waitForElement('iframe#iframe', document, 5000);
+            const iframeDocument = await waitForIframeContent(iframeElement, 5000);
+            
+            console.log('Clicking "Block ad" button...');
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait an extra second for iframe content to stabilize
+            const blockAdButton = await findAndClickButton('Block ad', iframeDocument, 'button[aria-label="Block ad"], gm3-text-button[data-aria-label="Block ad"]');
+            await verifyElementClicked(blockAdButton, () => findElementByText('CONTINUE', iframeDocument));
 
-        // Step 4: Find and click the close button within ad center
-        console.log('Clicking "Close" button within Ad Center...');
-        const closeButton = await findAndClickButton('Close', iframeDocument, 'button[aria-label="Close"], button.VfPpkd-Bz112c-LgbsSe');
-        await verifyElementClicked(closeButton, () => !document.querySelector('iframe#iframe'));
+            // Step 3: Find and click continue button
+            console.log('Clicking "CONTINUE" button...');
+            const continueButton = await findAndClickButton('CONTINUE', iframeDocument, 'div[role="button"][jsname="uYM01c"]');
+            await verifyElementClicked(continueButton, () => findElementByText('Close', iframeDocument));
+
+            // Step 4: Find and click the close button within ad center
+            console.log('Clicking "Close" button within Ad Center...');
+            const closeButton = await findAndClickButton('Close', iframeDocument, 'button[aria-label="Close"], button.VfPpkd-Bz112c-LgbsSe');
+            
+            // Re-enable close button before clicking it
+            closeButton.style.pointerEvents = '';
+            await verifyElementClicked(closeButton, () => !document.querySelector('iframe#iframe'));
+        }, 3, 2000);  // Retry the entire process up to 3 times with a 2-second delay between attempts
 
         console.log('Ad blocking process completed successfully');
         adsBlockedCount++;
